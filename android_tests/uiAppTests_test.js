@@ -16,16 +16,23 @@ describe('Appium tests', function() {
         platformName: "Android",
         platformVersion: "5.1",
         deviceName: "xxxxxxx",
-        //path to app
+        // path to app
         app: "app-release.apk",
         "app-package": "org.mozilla.magnet",
         "app-activity": "org.mozilla.magnet.MainActivity"
     };
 
+    var elements = {
+        magnetTile: "//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[2]/android.view.View[1]/android.widget.ImageView[1]",
+        tileInMainView: "//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[1]/android.widget.ScrollView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.ImageView[1]",
+        closeButton: "//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[2]/android.view.View[1]/android.widget.ImageView[1]",
+        nothingIsFoundString: "//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[2]/android.widget.TextView[1]"
+    }
+
     var browser = wd.promiseChainRemote("127.0.0.1", 4723);
 
     function swipe(opts) {
-          var action = new wd.TouchAction(this);
+        var action = new wd.TouchAction(this);
           action
             .press({x: opts.startX, y: opts.startY})
             .wait(opts.duration)
@@ -40,37 +47,57 @@ describe('Appium tests', function() {
             .setImplicitWaitTimeout(120000);
     });
 
+    it('should load Magnet app title', function(done) {
+        return browser
+            .elementByXPath(elements.magnetTile)
+            .isDisplayed().should.eventually.be.true
+            .nodeify(done)
+    });
+
     it('should load main view', function(done) {
         return browser
-            .elementByXPath("//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[1]/android.widget.ScrollView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.ImageView[1]")
+            .elementByXPath(elements.tileInMainView)
             .isDisplayed().should.eventually.be.true
             .nodeify(done)
     });
 
     it('should find and click the close button', function(done) {
         return browser
-            .elementByXPath("//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[1]/android.widget.ScrollView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.ImageView[1]").click()
-            .elementByXPath("//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[2]/android.view.View[1]/android.widget.ImageView[1]")
+            .elementByXPath(elements.tileInMainView)
+            .click()
+            .elementByXPath(elements.closeButton)
             .isDisplayed().should.eventually.be.true
-            .elementByXPath("//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[2]/android.view.View[1]/android.widget.ImageView[1]")
+            .elementByXPath(elements.closeButton)
             .click()
             .nodeify(done)
     });
 
+    it('should open browser from tile and go back to app', function(done) {
+        return browser
+            .elementByXPath(elements.tileInMainView)
+            .click()
+            .elementByXPath(elements.tileInMainView)
+            .click()
+            .back()
+            .elementByXPath(elements.tileInMainView)
+            .isDisplayed().should.eventually.be.true
+            .elementByXPath(elements.closeButton)
+            .click()
+            .nodeify(done);
+    });
+
     it('should swipe a tile', function(done) {
         wd.addPromiseChainMethod('swipe', swipe);
-        return browser.elementByXPath("//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[1]/android.widget.ScrollView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.ImageView[1]")
-        .swipe({ startX: 75, startY: 500,
-          endX: 715,  endY: 500, duration: 800 })
-        //the nothing string is found
-        .elementByXPath("//android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.FrameLayout[1]/android.view.View[1]/android.view.View[2]/android.widget.TextView[1]")
-        .isDisplayed().should.eventually.be.true
-        .nodeify(done);
+          return browser.elementByXPath(elements.tileInMainView)
+            .swipe({ startX: 75, startY: 500,
+              endX: 719,  endY: 500, duration: 800 })
+            // The nothing string is found
+            .elementByXPath(elements.nothingIsFoundString)
+            .isDisplayed().should.eventually.be.true
+            .nodeify(done);
     });
 
     after(function() {
-    //add code here
-    browser.quit()
+      browser.quit()
     });
-
 });
